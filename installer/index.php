@@ -154,7 +154,7 @@ switch ($step) {
         }elseif ($_GET['frame'] == 'laravel') {
             $console = 'artisan';
         }
-        $cmd = ['php', $console, 'admin:install','--username='.$_GET['username'],'--password'=>$_GET['password']];
+        $cmd = ['php', $console, 'admin:install','--username='.$_GET['username'],'--password='.$_GET['password']];
         exec_run($cmd);
         break;
     default:

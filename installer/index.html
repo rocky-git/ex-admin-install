@@ -24,7 +24,7 @@
         </el-steps>
         <!-- 环境检测 -->
         <div v-if="active == 1">
-            <el-descriptions :column="1" border v-if="info" style="margin-top: 10px">
+            <el-descriptions :column="1" border v-if="info" style="margin-top: 10px" >
                 <el-descriptions-item label="php版本" label-align="right" align="center" label-class-name="label-item">
                     {{info.php}}
                     <el-icon>
@@ -150,8 +150,8 @@
                     show-icon
             >
             </el-alert>
-            <el-descriptions :column="1" border style="margin-top: 10px" v-loading="loading">
-                <el-descriptions-item label="安装过程" label-align="right" align="center" label-class-name="label-item">
+            <el-descriptions :column="1" border style="margin-top: 10px">
+                <el-descriptions-item label="安装过程" label-align="right" align="center" label-class-name="label-item" v-loading="loading">
                     <pre class="install-content" v-html="composer_install" ref="terminal" ></pre>
                 </el-descriptions-item>
             </el-descriptions>
@@ -193,6 +193,7 @@
             }
         },
         created(){
+            this.loading = true
             this.check()
         },
         computed:{
@@ -200,9 +201,11 @@
                 if(this.active == 1 && this.info &&  this.info.check){
                     return false
                 }else if(this.active == 2 && this.frame_status == 1){
-                    return true
+                    return false
+                }else if(this.active == 3){
+                    return false
                 }
-                return false
+                return true
             }
         },
         methods:{
