@@ -128,7 +128,7 @@
         methods:{
             check(){
                 this.loading = true
-                axios.get('http://localhost:8000/index.php?step=1').then(res=>{
+                axios.get('http://0.0.0.0:8000/index.php?step=1').then(res=>{
                     this.info = res.data
                 }).finally(()=>{
                     this.loading = false
@@ -143,7 +143,7 @@
                 this.loading = true
                 this.frame_status = 0
                 this.composer_install = ''
-                let source = new EventSource('http://localhost:8000/index.php?step=2&frame='+this.frame);
+                let source = new EventSource('http://0.0.0.0:8000/index.php?step=2&frame='+this.frame);
                 source.onopen = (event)=>{
                     //  console.log(event)
                 }

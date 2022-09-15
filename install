@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+$host = '0.0.0.0';
+$port = 8000;
+$root = __DIR__ . DIRECTORY_SEPARATOR . 'installer';
+$command = sprintf(
+    'php -S %s:%d -t %s',
+    $host,
+    $port,
+    escapeshellarg($root)
+);
+passthru($command);
