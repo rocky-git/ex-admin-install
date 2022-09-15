@@ -1,6 +1,7 @@
 {
     "name": "rockys/ex-admin-install",
     "description": "Ex-admin安装器",
+    "type": "project",
     "license": "Apache-2.0",
     "keywords": [
         "Ex-admin",
