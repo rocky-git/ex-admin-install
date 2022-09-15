@@ -1,0 +1,25 @@
+{
+    "name": "rockys/ex-admin-install",
+    "description": "Ex-admin安装器",
+    "license": "Apache-2.0",
+    "keywords": [
+        "Ex-admin",
+        "ExAdmin",
+        "php",
+        "thinkphp",
+        "admin",
+        "CURD",
+        "ui"
+    ],
+    "authors": [
+        {
+            "name": "rocky",
+            "email": "631670747@qq.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.3.0",
+        "symfony/process": "*",
+        "symfony/filesystem": "*"
+    }
+}

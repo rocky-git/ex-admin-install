@@ -1,0 +1,29 @@
+.main {
+    width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+.logo{
+    width: 80px;
+}
+.title{
+
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+.label-item{
+    width: 150px;
+}
+.install-content{
+    height: 500px;
+    background: #000;
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    color: #999999;
+    text-align: left;
+    padding-top: 10px;
+    padding-left: 20px;
+
+}

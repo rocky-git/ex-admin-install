@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>安装</title>
+    <script src="js/vue.min.js"></script>
+    <script src="js/element-plus@2.2.16.js"></script>
+    <script src="js/icons-vue@2.0.9.js"></script>
+    <script src="js/axios.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="css/element-plus@2.2.16.css">
+    <link type="text/css" rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<div id="app">
+    <div class="main">
+        <div class="title">
+            <img src="logo.png" class="logo"/><h2>Ex-Admin</h2>
+        </div>
+        <el-steps :active="active" simple>
+            <el-step title="环境检测">
+            </el-step>
+            <el-step title="框架版本"></el-step>
+            <el-step title="数据配置"></el-step>
+            <el-step title="安装"></el-step>
+        </el-steps>
+        <!-- 环境检测 -->
+        <div v-if="active == 1">
+            <el-descriptions :column="1" border v-if="info" style="margin-top: 10px">
+                <el-descriptions-item label="php版本" label-align="right" align="center" label-class-name="label-item">
+                    {{info.php}}
+                    <el-icon>
+                        <Check v-if="info.php_check" color="green"></Check>
+                        <Close color="red" v-else></Close>
+                    </el-icon>
+                    <span style="color: red" v-if="!info.php_check">( >=7.4 && < 8.0)</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="composer" label-align="right" align="center" label-class-name="label-item">
+                    {{info.composer}}
+                    <el-icon>
+                        <Check v-if="info.composer_check" color="green"></Check>
+                        <Close color="red" v-else></Close>
+                    </el-icon>
+                </el-descriptions-item>
+            </el-descriptions>
+            <el-descriptions title="PHP扩展" :column="1" border v-if="info" style="margin-top: 10px">
+                <el-descriptions-item label="pdo_mysql" label-align="right" align="center" label-class-name="label-item">
+                    <el-icon>
+                        <Check v-if="info.pdo_mysql" color="green"></Check>
+                        <Close color="red" v-else></Close>
+                    </el-icon>
+                </el-descriptions-item>
+                <el-descriptions-item label="curl" label-align="right" align="center" label-class-name="label-item">
+                    <el-icon>
+                        <Check v-if="info.curl" color="green"></Check>
+                        <Close color="red" v-else></Close>
+                    </el-icon>
+                </el-descriptions-item>
+                <el-descriptions-item label="gd" label-align="right" align="center" label-class-name="label-item">
+                    <el-icon>
+                        <Check v-if="info.gd" color="green"></Check>
+                        <Close color="red" v-else></Close>
+                    </el-icon>
+                </el-descriptions-item>
+                <el-descriptions-item label="fileinfo" label-align="right" align="center" label-class-name="label-item">
+                    <el-icon>
+                        <Check v-if="info.fileinfo" color="green"></Check>
+                        <Close color="red" v-else></Close>
+                    </el-icon>
+                </el-descriptions-item>
+                <el-descriptions-item label="zlib" label-align="right" align="center" label-class-name="label-item">
+                    <el-icon>
+                        <Check v-if="info.zlib" color="green"></Check>
+                        <Close color="red" v-else></Close>
+                    </el-icon>
+                </el-descriptions-item>
+            </el-descriptions>
+        </div>
+        <!-- 框架版本 -->
+        <div v-else-if="active == 2">
+            <el-descriptions :column="1" border v-if="info" style="margin-top: 10px">
+                <el-descriptions-item label="PHP框架" label-align="right" align="center" label-class-name="label-item">
+                    <el-space :size="30">
+                        <el-radio-group v-model="frame">
+                            <el-radio label="laravel" >laravel</el-radio>
+                            <el-radio label="thinkphp" >thinkphp</el-radio>
+                        </el-radio-group>
+                        <el-button :disabled="!frame" @click="installFrame" :loading="loading">安装</el-button>
+                    </el-space>
+
+                </el-descriptions-item>
+                <el-descriptions-item label="安装过程" label-align="right" align="center" label-class-name="label-item">
+                    <pre class="install-content" v-html="composer_install" ref="terminal"></pre>
+                </el-descriptions-item>
+            </el-descriptions>
+        </div>
+        <el-button style="margin-top: 12px" @click="check" v-if="active == 1" type="primary" :loading="loading">重新检测</el-button>
+        <el-button style="margin-top: 12px" @click="prev"  v-if="active > 1">上一步</el-button>
+        <el-button style="margin-top: 12px" @click="next" :disabled="buttonStatus"  type="primary">下一步</el-button>
+    </div>
+</div>
+<script>
+    const { createApp } = Vue
+    const app = createApp({
+        data() {
+            return {
+                info:null,
+                loading:false,
+                active:1,
+                frame:null,
+                frame_status:0,
+                composer_install:'',
+
+            }
+        },
+        created(){
+            this.check()
+        },
+        computed:{
+            buttonStatus(){
+                if(this.active == 1 && this.info &&  this.info.check){
+                    return false
+                }else if(this.active == 2 && this.frame_status == 1){
+                    return false
+                }
+                return true
+            }
+        },
+        methods:{
+            check(){
+                this.loading = true
+                axios.get('http://localhost:8000/index.php?step=1').then(res=>{
+                    this.info = res.data
+                }).finally(()=>{
+                    this.loading = false
+                })
+            },
+            scrollToBottom(){
+                this.$nextTick(()=>{
+                    this.$refs.terminal.scrollTop = this.$refs.terminal.scrollHeight
+                })
+            },
+            installFrame(){
+                this.loading = true
+                this.frame_status = 0
+                this.composer_install = ''
+                let source = new EventSource('http://localhost:8000/index.php?step=2&frame='+this.frame);
+                source.onopen = (event)=>{
+                    //  console.log(event)
+                }
+                source.addEventListener('data',(event)=>{
+                    // console.log(event)
+                    this.composer_install += event.data
+                    this.scrollToBottom()
+                })
+                source.addEventListener('dataError',(event)=>{
+                    this.frame_status = -1
+                    this.composer_install += "\n<span style='color: red'>"+event.data+"</span>"
+                    this.scrollToBottom()
+                })
+                source.onerror = (event)=>{
+                    if(this.frame_status == 0){
+                        this.frame_status = 1
+                    }
+                    source.close();
+                    this.loading = false
+                }
+            },
+            next(){
+                this.active++
+            },
+            prev(){
+                this.active--
+            }
+        }
+    }).use(ElementPlus)
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component)
+    }
+    app.mount('#app')
+</script>
+</body>
+</html>
