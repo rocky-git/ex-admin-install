@@ -50,11 +50,10 @@ switch ($step) {
             $cmd = ['composer', 'require', 'laravel/laravel'];
         }
         $cmd = ['composer', 'require', 'topthink/think'];
-        exec_run($cmd);
+        exec_run($cmd,__DIR__);
         $filesystem = new \Symfony\Component\Filesystem\Filesystem();
-        $filesystem->mirror($rootPath . '/vendor/topthink/think', $rootPath, null, ['override' => true]);
-        $cmd = ['composer', 'remove', 'rockys/ex-admin-thinkphp', 'rockys/ex-admin-laravel'];
-        exec_run($cmd);
+        $filesystem->mirror(__DIR__ . '/vendor/topthink/think', $rootPath, null, ['override' => true]);
+        $filesystem->remove([__DIR__.'/vendor/',__DIR__.'/composer.json',__DIR__.'/composer.lock']);
         $cmd = ['composer', 'require', 'rockys/ex-admin-' . $_GET['frame']];
         exec_run($cmd);
         $cmd = ['composer', 'require', 'symfony/process'];
@@ -72,9 +71,12 @@ function ouput($buffer){
     echo $content . PHP_EOL;
 }
 
-function exec_run($cmd,$out = true)
+function exec_run($cmd,$root=null,$out = true)
 {
-    $process = new Process($cmd, dirname(__DIR__));
+    if(is_null($root)){
+        $root = dirname(__DIR__);
+    }
+    $process = new Process($cmd, $root);
     try {
         $process->mustRun(function ($type, $buffer) use($out){
 //                if (Process::OUT === $type) {
