@@ -41,18 +41,20 @@ switch ($step) {
         set_time_limit(0);
         ob_end_clean();
         ob_implicit_flush(1);
-
-        @unlink($rootPath. '/composer.json');
+        $filesystem = new \Symfony\Component\Filesystem\Filesystem();
+        $filesystem->remove([$rootPath.'/composer.json',$rootPath.'/composer.lock']);
 
         if ($_GET['frame'] == 'thinkphp') {
             $cmd = ['composer', 'require', 'topthink/think'];
         } elseif ($_GET['frame'] == 'laravel') {
             $cmd = ['composer', 'require', 'laravel/laravel'];
         }
-        $cmd = ['composer', 'require', 'topthink/think'];
         exec_run($cmd,__DIR__);
-        $filesystem = new \Symfony\Component\Filesystem\Filesystem();
-        $filesystem->mirror(__DIR__ . '/vendor/topthink/think', $rootPath, null, ['override' => true]);
+        if ($_GET['frame'] == 'thinkphp') {
+            $filesystem->mirror(__DIR__ . '/vendor/topthink/think', $rootPath, null, ['override' => true]);
+        } elseif ($_GET['frame'] == 'laravel') {
+            $filesystem->mirror(__DIR__ . '/vendor/laravel/laravel', $rootPath, null, ['override' => true]);
+        }
         $filesystem->remove([__DIR__.'/vendor/',__DIR__.'/composer.json',__DIR__.'/composer.lock']);
         $cmd = ['composer', 'require', 'rockys/ex-admin-' . $_GET['frame']];
         exec_run($cmd);
