@@ -1,8 +1,8 @@
 <?php
 
 use Symfony\Component\Process\Process;
-
-//require __DIR__. '/vendor/autoload.php';
+$rootPath = dirname(__DIR__);
+require $rootPath . '/vendor/autoload.php';
 $step = $_GET['step'] ?? 0;
 switch ($step) {
     case 1:
@@ -42,7 +42,7 @@ switch ($step) {
         ob_end_clean();
         ob_implicit_flush(1);
 
-        @unlink(__DIR__ . '/composer.json');
+        @unlink($rootPath. '/composer.json');
 
         if ($_GET['frame'] == 'thinkphp') {
             $cmd = ['composer', 'require', 'topthink/think'];
@@ -52,7 +52,7 @@ switch ($step) {
         $cmd = ['composer', 'require', 'topthink/think'];
         exec_run($cmd);
         $filesystem = new \Symfony\Component\Filesystem\Filesystem();
-        $filesystem->mirror(__DIR__ . '/vendor/topthink/think', __DIR__, null, ['override' => true]);
+        $filesystem->mirror($rootPath . '/vendor/topthink/think', $rootPath, null, ['override' => true]);
         $cmd = ['composer', 'remove', 'rockys/ex-admin-thinkphp', 'rockys/ex-admin-laravel'];
         exec_run($cmd);
         $cmd = ['composer', 'require', 'rockys/ex-admin-' . $_GET['frame']];
@@ -65,16 +65,16 @@ switch ($step) {
     default:
         echo file_get_contents(__DIR__ . '/index.html');
 }
-function ouput($content){
+function ouput($buffer){
     $content = "event:data" . PHP_EOL; //定义事件
-    $buffer = str_replace(PHP_EOL, '<br/>', $content);
-    $content .= "data: $content" . PHP_EOL; //推送内容
+    $buffer = str_replace(PHP_EOL, '<br/>', $buffer);
+    $content .= "data: $buffer" . PHP_EOL; //推送内容
     echo $content . PHP_EOL;
 }
 
 function exec_run($cmd,$out = true)
 {
-    $process = new Process($cmd, __DIR__);
+    $process = new Process($cmd, $rootPath);
     try {
         $process->mustRun(function ($type, $buffer) use($out){
 //                if (Process::OUT === $type) {
