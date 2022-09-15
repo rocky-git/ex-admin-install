@@ -74,7 +74,7 @@ function ouput($buffer){
 
 function exec_run($cmd,$out = true)
 {
-    $process = new Process($cmd, $rootPath);
+    $process = new Process($cmd, dirname(__DIR__));
     try {
         $process->mustRun(function ($type, $buffer) use($out){
 //                if (Process::OUT === $type) {
