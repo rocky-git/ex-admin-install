@@ -59,11 +59,103 @@ switch ($step) {
         $filesystem->remove([__DIR__ . '/vendor/', __DIR__ . '/composer.json', __DIR__ . '/composer.lock']);
         $cmd = ['composer', 'require', 'rockys/ex-admin-' . $_GET['frame']];
         exec_run($cmd);
-        $cmd = ['composer', 'require', 'symfony/process','"*"'];
+        $cmd = ['composer', 'require', 'symfony/process','*'];
         exec_run($cmd, null, false);
 
-        $cmd = ['composer', 'require', 'symfony/filesystem','"*"'];
+        $cmd = ['composer', 'require', 'symfony/filesystem','*'];
         exec_run($cmd, null, false);
+        break;
+    case 3:
+        $data = [
+            'code'=>0,
+            'message'=>'',
+        ];
+
+        $content = file_get_contents('php://input');
+        $post = (array)json_decode($content, true);
+        $database = $post['database'];
+        $user = $post['user'];
+        $dsn="mysql:port={$database['port']};host={$database['hostname']}";
+        try{
+            $pdo=new \PDO($dsn,$database['username'],$database['password']);
+            $res = $pdo->query( "show databases;");
+            $res = $res->fetchAll(\PDO::FETCH_ASSOC);
+            $database_list = [];
+            foreach($res as $k => $v) {
+                $database_list[] = $v['Database'];
+            }
+            if (!in_array($database['database'],$database_list)) {
+                throw new \Exception('数据库不存在');
+            }
+        }catch(\Exception $e){
+            $data['message'] = $e->getMessage();
+            $data['code'] = 1;
+            echo json_encode($data);
+            return;
+        }
+        if(empty($user['username'])){
+            $data['message'] = '管理员用户名不能为空';
+            $data['code'] = 1;
+        }
+        if(empty($user['password'])){
+            $data['message'] = '管理员密码不能为空';
+            $data['code'] = 1;
+        }
+        if($user['password'] != $user['password_confim']){
+            $data['message'] = '管理员密码不一致';
+            $data['code'] = 1;
+        }
+        if($data['code'] == 0){
+
+            if ($_GET['frame'] == 'thinkphp') {
+                $env = file_get_contents($rootPath.'/.example.env');
+                $env = str_replace([
+                    '127.0.0.1',
+                    'test',
+                    'username',
+                    'password',
+                    '3306',
+                ],[
+                    $database['hostname'],
+                    $database['database'],
+                    $database['username'],
+                    $database['password'],
+                    $database['port'],
+                ],$env);
+            }elseif ($_GET['frame'] == 'laravel') {
+                $env = file_get_contents($rootPath.'/.env.example');
+                $env = str_replace([
+                    '127.0.0.1',
+                    'laravel',
+                    'root',
+                    'DB_PASSWORD=',
+                    '3306',
+                ],[
+                    $database['hostname'],
+                    $database['database'],
+                    $database['username'],
+                    'DB_PASSWORD='.$database['password'],
+                    $database['port'],
+                ],$env);
+            }
+            file_put_contents($rootPath.'/.env',$env);
+        }
+        echo json_encode($data);
+        break;
+    case 4:
+        header('Content-Type: text/event-stream');
+        header('Cache-Control: no-cache');
+        header('X-Accel-Buffering: no');
+        set_time_limit(0);
+        ob_end_clean();
+        ob_implicit_flush(1);
+        if ($_GET['frame'] == 'thinkphp') {
+            $console = 'think';
+        }elseif ($_GET['frame'] == 'laravel') {
+            $console = 'artisan';
+        }
+        $cmd = ['php', $console, 'admin:install','--username='.$_GET['username'],'--password'=>$_GET['password']];
+        exec_run($cmd);
         break;
     default:
         echo file_get_contents(__DIR__ . '/index.html');

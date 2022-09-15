@@ -16,9 +16,8 @@
         <div class="title">
             <img src="logo.png" class="logo"/><h2>Ex-Admin</h2>
         </div>
-        <el-steps :active="active" simple>
-            <el-step title="环境检测">
-            </el-step>
+        <el-steps :active="active" simple finish-status="success">
+            <el-step title="环境检测"></el-step>
             <el-step title="框架版本"></el-step>
             <el-step title="数据配置"></el-step>
             <el-step title="安装"></el-step>
@@ -93,9 +92,67 @@
                 </el-descriptions-item>
             </el-descriptions>
         </div>
+        <!-- 数据库配置 -->
+        <div v-else-if="active == 3">
+            <el-alert v-if="error" :title="error" type="error" style="margin-top: 10px"></el-alert>
+            <h3 style="margin-top: 10px;text-align: left">
+                数据库配置
+            </h3>
+
+            <el-form :model="database" label-width="120px">
+                <el-form-item label="主机地址">
+                    <el-input v-model="database.hostname" />
+                </el-form-item>
+                <el-form-item label="数据库名">
+                    <el-input v-model="database.database" />
+                </el-form-item>
+                <el-form-item label="用户名">
+                    <el-input v-model="database.username" />
+                </el-form-item>
+                <el-form-item label="密码">
+                    <el-input v-model="database.password" type="password" />
+                </el-form-item>
+                <el-form-item label="端口号">
+                    <el-input v-model="database.port"  />
+                </el-form-item>
+            </el-form>
+            <h3 style="margin-top: 10px;text-align: left">
+                管理员
+            </h3>
+            <el-form :model="user" label-width="120px">
+                <el-form-item label="用户名">
+                    <el-input v-model="user.username" />
+                </el-form-item>
+                <el-form-item label="密码">
+                    <el-input v-model="user.password" type="password" />
+                </el-form-item>
+                <el-form-item label="确认密码">
+                    <el-input v-model="user.password_confim" type="password" />
+                </el-form-item>
+            </el-form>
+        </div>
+        <!-- 安装 -->
+        <div v-else-if="active == 4">
+            <el-alert
+                    style="margin-top: 10px"
+                    v-if="install_status == 1"
+                    title="安装完成"
+                    type="success"
+                    show-icon
+            >
+                <el-link href="http://127.0.0.1" type="success" target="_blank">安装视频教程</el-link>
+            </el-alert>
+            <el-descriptions :column="1" border style="margin-top: 10px" v-loading="loading">
+                <el-descriptions-item label="安装过程" label-align="right" align="center" label-class-name="label-item">
+                    <pre class="install-content" v-html="composer_install" ref="terminal" ></pre>
+                </el-descriptions-item>
+            </el-descriptions>
+
+        </div>
         <el-button style="margin-top: 12px" @click="check" v-if="active == 1" type="primary" :loading="loading">重新检测</el-button>
-        <el-button style="margin-top: 12px" @click="prev"  v-if="active > 1">上一步</el-button>
-        <el-button style="margin-top: 12px" @click="next" :disabled="buttonStatus"  type="primary">下一步</el-button>
+        <el-button style="margin-top: 12px" @click="prev"  v-if="active > 1 && active < 4">上一步</el-button>
+        <el-button style="margin-top: 12px" @click="prev"  v-if="install_status == 2">返回</el-button>
+        <el-button style="margin-top: 12px" @click="next" :disabled="buttonStatus" type="primary" :loading="loading"  v-if="active < 4">{{active==3?'安装':'下一步'}}</el-button>
     </div>
 </div>
 <script>
@@ -109,7 +166,20 @@
                 frame:null,
                 frame_status:0,
                 composer_install:'',
-
+                database:{
+                    hostname:'127.0.0.1',
+                    database:'',
+                    username:'root',
+                    password:'',
+                    port:3306,
+                },
+                user:{
+                    username:'admin',
+                    password:'',
+                    password_confim:'',
+                },
+                error:'',
+                install_status:0
             }
         },
         created(){
@@ -122,7 +192,7 @@
                 }else if(this.active == 2 && this.frame_status == 1){
                     return false
                 }
-                return true
+                return false
             }
         },
         methods:{
@@ -145,6 +215,7 @@
                 this.composer_install = ''
                 let source = new EventSource('http://0.0.0.0:8000/index.php?step=2&frame='+this.frame);
                 source.onopen = (event)=>{
+
                     //  console.log(event)
                 }
                 source.addEventListener('data',(event)=>{
@@ -163,10 +234,57 @@
                     }
                     source.close();
                     this.loading = false
+
+                }
+            },
+            install(){
+                this.loading = true
+                this.composer_install = ''
+                let source = new EventSource('http://0.0.0.0:8000/index.php?step=4&username='+this.user.username+'&password='+this.user.password+'&frame='+this.frame);
+                source.onopen = (event)=>{
+                    //  console.log(event)
+                    this.install_status = 0
+                }
+                source.addEventListener('data',(event)=>{
+                    // console.log(event)
+                    this.composer_install += event.data
+                    this.scrollToBottom()
+                })
+                source.addEventListener('dataError',(event)=>{
+                    this.frame_status = -1
+                    this.composer_install += "\n<span style='color: red'>"+event.data+"</span>"
+                    this.scrollToBottom()
+                })
+                source.onerror = (event)=>{
+                    source.close();
+                    this.loading = false
+                    if(this.composer_install.indexOf('success') > -1){
+                        this.install_status = 1
+                    }else{
+                        this.install_status = 2
+                    }
                 }
             },
             next(){
-                this.active++
+                if(this.active == 3){
+                    this.loading = true
+                    this.error = ''
+                    axios.post('http://0.0.0.0:8000/index.php?step=3&frame='+this.frame,{
+                        database:this.database,
+                        user:this.user,
+                    }).then(res=>{
+                        if(res.data.code == 1){
+                            this.error = res.data.message
+                        }else{
+                            this.active++
+                            this.install()
+                        }
+                    }).finally(()=>{
+                        this.loading = false
+                    })
+                }else{
+                    this.active++
+                }
             },
             prev(){
                 this.active--
