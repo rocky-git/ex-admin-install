@@ -59,9 +59,10 @@ switch ($step) {
         $filesystem->remove([__DIR__ . '/vendor/', __DIR__ . '/composer.json', __DIR__ . '/composer.lock']);
         $cmd = ['composer', 'require', 'rockys/ex-admin-' . $_GET['frame']];
         exec_run($cmd);
-        $cmd = ['composer', 'require', 'symfony/process'];
+        $cmd = ['composer', 'require', 'symfony/process','"*"'];
         exec_run($cmd, null, false);
-        $cmd = ['composer', 'require', 'symfony/filesystem'];
+
+        $cmd = ['composer', 'require', 'symfony/filesystem','"*"'];
         exec_run($cmd, null, false);
         break;
     default:
