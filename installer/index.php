@@ -174,6 +174,7 @@ function exec_run($cmd, $root = null, $out = true)
         $root = dirname(__DIR__);
     }
     $process = new Process($cmd, $root);
+    $process->setTimeout(0);
     try {
         $process->mustRun(function ($type, $buffer) use ($out) {
 //                if (Process::OUT === $type) {
