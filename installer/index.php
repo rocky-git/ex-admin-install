@@ -78,6 +78,10 @@ switch ($step) {
             $data['message'] = '管理员密码不能为空';
             $data['code'] = 1;
         }
+        if(strlen($user['password']) < 6){
+            $data['message'] = '管理员密码长度不能小于6位';
+            $data['code'] = 1;
+        }
         if($user['password'] != $user['password_confim']){
             $data['message'] = '管理员密码不一致';
             $data['code'] = 1;

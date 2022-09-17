@@ -150,7 +150,7 @@
 
         <div style="text-align: center;">
             <el-button style="margin-top: 12px" @click="check" v-if="active == 1" type="primary" :loading="loading">重新检测</el-button>
-            <el-button style="margin-top: 12px" @click="prev"  v-if="active > 1 && active < 3">上一步</el-button>
+            <el-button style="margin-top: 12px" @click="prev"  v-if="active > 1 && active < 4">上一步</el-button>
             <el-button style="margin-top: 12px" @click="prev"  v-if="install_status == 2">返回</el-button>
             <el-button style="margin-top: 12px" @click="next" :disabled="buttonStatus" type="primary" :loading="loading"  v-if="active < 3">{{active==3?'安装':'下一步'}}</el-button>
         </div>
