@@ -47,8 +47,14 @@ switch ($step) {
         $database = $post['database'];
         $user = $post['user'];
         $dsn="mysql:port={$database['port']};host={$database['hostname']}";
+
         try{
             $pdo=new \PDO($dsn,$database['username'],$database['password']);
+            $res = $pdo->query( "select VERSION();");
+            $res = $res->fetch(\PDO::FETCH_ASSOC);
+            if( version_compare($res['VERSION()'], '5.7') == -1){
+                throw new \Exception('数据库版本需>=5.7');
+            }
             $res = $pdo->query( "show databases;");
             $res = $res->fetchAll(\PDO::FETCH_ASSOC);
             $database_list = [];
