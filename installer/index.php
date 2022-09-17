@@ -35,37 +35,8 @@ switch ($step) {
         ];
         echo json_encode($data);
         break;
+
     case 2:
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache');
-        header('X-Accel-Buffering: no');
-        set_time_limit(0);
-        ob_end_clean();
-        ob_implicit_flush(1);
-        $filesystem = new \Symfony\Component\Filesystem\Filesystem();
-        $filesystem->remove([$rootPath . '/composer.json', $rootPath . '/composer.lock']);
-
-        if ($_GET['frame'] == 'thinkphp') {
-            $cmd = ['composer', 'require', 'topthink/think'];
-        } elseif ($_GET['frame'] == 'laravel') {
-            $cmd = ['composer', 'require', 'laravel/laravel'];
-        }
-        exec_run($cmd, __DIR__);
-        if ($_GET['frame'] == 'thinkphp') {
-            $filesystem->mirror(__DIR__ . '/vendor/topthink/think', $rootPath, null, ['override' => true]);
-        } elseif ($_GET['frame'] == 'laravel') {
-            $filesystem->mirror(__DIR__ . '/vendor/laravel/laravel', $rootPath, null, ['override' => true]);
-        }
-        $filesystem->remove([__DIR__ . '/vendor/', __DIR__ . '/composer.json', __DIR__ . '/composer.lock']);
-        $cmd = ['composer', 'require', 'rockys/ex-admin-' . $_GET['frame']];
-        exec_run($cmd);
-        $cmd = ['composer', 'require', 'symfony/process','*'];
-        exec_run($cmd, null, false);
-
-        $cmd = ['composer', 'require', 'symfony/filesystem','*'];
-        exec_run($cmd, null, false);
-        break;
-    case 3:
         $data = [
             'code'=>0,
             'message'=>'',
@@ -105,56 +76,76 @@ switch ($step) {
             $data['message'] = '管理员密码不一致';
             $data['code'] = 1;
         }
-        if($data['code'] == 0){
-
-            if ($_GET['frame'] == 'thinkphp') {
-                $env = file_get_contents($rootPath.'/.example.env');
-                $env = str_replace([
-                    '127.0.0.1',
-                    'test',
-                    'username',
-                    'password',
-                    '3306',
-                ],[
-                    $database['hostname'],
-                    $database['database'],
-                    $database['username'],
-                    $database['password'],
-                    $database['port'],
-                ],$env);
-            }elseif ($_GET['frame'] == 'laravel') {
-                $env = file_get_contents($rootPath.'/.env.example');
-                $env = str_replace([
-                    '127.0.0.1',
-                    'laravel',
-                    'root',
-                    'DB_PASSWORD=',
-                    '3306',
-                ],[
-                    $database['hostname'],
-                    $database['database'],
-                    $database['username'],
-                    'DB_PASSWORD='.$database['password'],
-                    $database['port'],
-                ],$env);
-            }
-            file_put_contents($rootPath.'/.env',$env);
-        }
         echo json_encode($data);
         break;
-    case 4:
+    case 3:
         header('Content-Type: text/event-stream');
         header('Cache-Control: no-cache');
         header('X-Accel-Buffering: no');
         set_time_limit(0);
         ob_end_clean();
         ob_implicit_flush(1);
+        $filesystem = new \Symfony\Component\Filesystem\Filesystem();
+        $filesystem->remove([$rootPath . '/composer.json', $rootPath . '/composer.lock']);
+        $database = json_decode($_GET['database'],true);
+        $user = json_decode($_GET['user'],true);
+        if ($_GET['frame'] == 'thinkphp') {
+            $cmd = ['composer', 'require', 'topthink/think'];
+        } elseif ($_GET['frame'] == 'laravel') {
+            $cmd = ['composer', 'require', 'laravel/laravel'];
+        }
+        exec_run($cmd, __DIR__);
+        if ($_GET['frame'] == 'thinkphp') {
+            $filesystem->mirror(__DIR__ . '/vendor/topthink/think', $rootPath, null, ['override' => true]);
+        } elseif ($_GET['frame'] == 'laravel') {
+            $filesystem->mirror(__DIR__ . '/vendor/laravel/laravel', $rootPath, null, ['override' => true]);
+        }
+        if ($_GET['frame'] == 'thinkphp') {
+            $env = file_get_contents($rootPath.'/.example.env');
+            $env = str_replace([
+                '127.0.0.1',
+                'test',
+                'username',
+                'password',
+                '3306',
+            ],[
+                $database['hostname'],
+                $database['database'],
+                $database['username'],
+                $database['password'],
+                $database['port'],
+            ],$env);
+        }elseif ($_GET['frame'] == 'laravel') {
+            $env = file_get_contents($rootPath.'/.env.example');
+            $env = str_replace([
+                '127.0.0.1',
+                'laravel',
+                'root',
+                'DB_PASSWORD=',
+                '3306',
+            ],[
+                $database['hostname'],
+                $database['database'],
+                $database['username'],
+                'DB_PASSWORD='.$database['password'],
+                $database['port'],
+            ],$env);
+        }
+        file_put_contents($rootPath.'/.env',$env);
+        $filesystem->remove([__DIR__ . '/vendor/', __DIR__ . '/composer.json', __DIR__ . '/composer.lock']);
+        $cmd = ['composer', 'require', 'rockys/ex-admin-' . $_GET['frame']];
+        exec_run($cmd);
+        $cmd = ['composer', 'require', 'symfony/process','*'];
+        exec_run($cmd, null, false);
+
+        $cmd = ['composer', 'require', 'symfony/filesystem','*'];
+        exec_run($cmd, null, false);
         if ($_GET['frame'] == 'thinkphp') {
             $console = 'think';
         }elseif ($_GET['frame'] == 'laravel') {
             $console = 'artisan';
         }
-        $cmd = ['php', $console, 'admin:install','--username='.$_GET['username'],'--password='.$_GET['password']];
+        $cmd = ['php', $console, 'admin:install','--force','--username='.$_GET['username'],'--password='.$_GET['password']];
         exec_run($cmd);
         break;
     default:

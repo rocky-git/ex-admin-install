@@ -18,7 +18,6 @@
         </div>
         <el-steps :active="active" simple finish-status="success">
             <el-step title="环境检测"></el-step>
-            <el-step title="框架版本"></el-step>
             <el-step title="数据配置"></el-step>
             <el-step title="安装"></el-step>
         </el-steps>
@@ -74,26 +73,8 @@
                 </el-descriptions-item>
             </el-descriptions>
         </div>
-        <!-- 框架版本 -->
-        <div v-else-if="active == 2">
-            <el-descriptions :column="1" border v-if="info" style="margin-top: 10px">
-                <el-descriptions-item label="PHP框架" label-align="right" align="center" label-class-name="label-item">
-                    <el-space :size="30">
-                        <el-radio-group v-model="frame">
-                            <el-radio label="laravel" >laravel</el-radio>
-                            <el-radio label="thinkphp" >thinkphp</el-radio>
-                        </el-radio-group>
-                        <el-button :disabled="!frame" @click="installFrame" :loading="loading">安装</el-button>
-                    </el-space>
-
-                </el-descriptions-item>
-                <el-descriptions-item label="安装过程" label-align="right" align="center" label-class-name="label-item">
-                    <pre class="install-content" v-html="composer_install" ref="terminal"></pre>
-                </el-descriptions-item>
-            </el-descriptions>
-        </div>
         <!-- 数据库配置 -->
-        <div v-else-if="active == 3">
+        <div v-else-if="active == 2">
             <el-alert v-if="error" :title="error" type="error" style="margin-top: 10px"></el-alert>
             <h3 style="margin-top: 10px;text-align: left">
                 数据库配置
@@ -132,7 +113,7 @@
             </el-form>
         </div>
         <!-- 安装 -->
-        <div v-else-if="active == 4">
+        <div v-else-if="active == 3">
             <el-alert
                     style="margin-top: 10px"
                     v-if="install_status == 1"
@@ -145,23 +126,33 @@
             <el-alert
                     style="margin-top: 10px"
                     v-if="install_status == 2"
-                    title="安装失败，返回重试"
+                    title="安装失败，请排查重试"
                     type="error"
                     show-icon
             >
             </el-alert>
-            <el-descriptions :column="1" border style="margin-top: 10px">
-                <el-descriptions-item label="安装过程" label-align="right" align="center" label-class-name="label-item" v-loading="loading">
-                    <pre class="install-content" v-html="composer_install" ref="terminal" ></pre>
+            <el-descriptions :column="1" border v-if="info" style="margin-top: 10px">
+                <el-descriptions-item label="PHP框架" label-align="right" align="center" label-class-name="label-item">
+                    <el-space :size="30">
+                        <el-radio-group v-model="frame">
+                            <el-radio label="laravel" >laravel</el-radio>
+                            <el-radio label="thinkphp" >thinkphp</el-radio>
+                        </el-radio-group>
+                        <el-button :disabled="!frame" @click="install" :loading="loading">安装</el-button>
+                    </el-space>
+
+                </el-descriptions-item>
+                <el-descriptions-item label="安装过程" label-align="right" align="center" label-class-name="label-item">
+                    <pre class="install-content" v-html="composer_install" ref="terminal"></pre>
                 </el-descriptions-item>
             </el-descriptions>
-
         </div>
+
         <div style="text-align: center;">
             <el-button style="margin-top: 12px" @click="check" v-if="active == 1" type="primary" :loading="loading">重新检测</el-button>
-            <el-button style="margin-top: 12px" @click="prev"  v-if="active > 1 && active < 4">上一步</el-button>
+            <el-button style="margin-top: 12px" @click="prev"  v-if="active > 1 && active < 3">上一步</el-button>
             <el-button style="margin-top: 12px" @click="prev"  v-if="install_status == 2">返回</el-button>
-            <el-button style="margin-top: 12px" @click="next" :disabled="buttonStatus" type="primary" :loading="loading"  v-if="active < 4">{{active==3?'安装':'下一步'}}</el-button>
+            <el-button style="margin-top: 12px" @click="next" :disabled="buttonStatus" type="primary" :loading="loading"  v-if="active < 3">{{active==3?'安装':'下一步'}}</el-button>
         </div>
     </div>
 </div>
@@ -174,7 +165,6 @@
                 loading:false,
                 active:1,
                 frame:null,
-                frame_status:0,
                 composer_install:'',
                 database:{
                     hostname:'127.0.0.1',
@@ -200,9 +190,7 @@
             buttonStatus(){
                 if(this.active == 1 && this.info &&  this.info.check){
                     return false
-                }else if(this.active == 2 && this.frame_status == 1){
-                    return false
-                }else if(this.active == 3){
+                }else if(this.active == 2){
                     return false
                 }
                 return true
@@ -222,38 +210,19 @@
                     this.$refs.terminal.scrollTop = this.$refs.terminal.scrollHeight
                 })
             },
-            installFrame(){
-                this.loading = true
-                this.frame_status = 0
-                this.composer_install = ''
-                let source = new EventSource('http://0.0.0.0:8000/index.php?step=2&frame='+this.frame);
-                source.onopen = (event)=>{
 
-                    //  console.log(event)
-                }
-                source.addEventListener('data',(event)=>{
-                    // console.log(event)
-                    this.composer_install += event.data
-                    this.scrollToBottom()
-                })
-                source.addEventListener('dataError',(event)=>{
-                    this.frame_status = -1
-                    this.composer_install += "\n<span style='color: red'>"+event.data+"</span>"
-                    this.scrollToBottom()
-                })
-                source.onerror = (event)=>{
-                    if(this.frame_status == 0){
-                        this.frame_status = 1
-                    }
-                    source.close();
-                    this.loading = false
-
-                }
-            },
             install(){
                 this.loading = true
+                this.install_status = 0
                 this.composer_install = ''
-                let source = new EventSource('http://0.0.0.0:8000/index.php?step=4&username='+this.user.username+'&password='+this.user.password+'&frame='+this.frame);
+                let source = new EventSource('http://0.0.0.0:8000/index.php?step=3&username='+
+                    this.user.username+
+                    '&password='+
+                    this.user.password+
+                    '&frame='+this.frame+
+                    '&database='+JSON.stringify(this.database)+
+                    '&user='+JSON.stringify(this.user)
+                );
                 source.onopen = (event)=>{
                     //  console.log(event)
                     this.install_status = 0
@@ -264,7 +233,7 @@
                     this.scrollToBottom()
                 })
                 source.addEventListener('dataError',(event)=>{
-                    this.frame_status = -1
+
                     this.composer_install += "\n<span style='color: red'>"+event.data+"</span>"
                     this.scrollToBottom()
                 })
@@ -279,10 +248,10 @@
                 }
             },
             next(){
-                if(this.active == 3){
+                if(this.active == 2){
                     this.loading = true
                     this.error = ''
-                    axios.post('http://0.0.0.0:8000/index.php?step=3&frame='+this.frame,{
+                    axios.post('http://0.0.0.0:8000/index.php?step=2&frame='+this.frame,{
                         database:this.database,
                         user:this.user,
                     }).then(res=>{
@@ -290,7 +259,6 @@
                             this.error = res.data.message
                         }else{
                             this.active++
-                            this.install()
                         }
                     }).finally(()=>{
                         this.loading = false
