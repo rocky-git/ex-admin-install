@@ -199,7 +199,7 @@
         methods:{
             check(){
                 this.loading = true
-                axios.get('http://0.0.0.0:8000/index.php?step=1').then(res=>{
+                axios.get('http://127.0.0.1:8000/index.php?step=1').then(res=>{
                     this.info = res.data
                 }).finally(()=>{
                     this.loading = false
@@ -215,7 +215,7 @@
                 this.loading = true
                 this.install_status = 0
                 this.composer_install = ''
-                let source = new EventSource('http://0.0.0.0:8000/index.php?step=3&username='+
+                let source = new EventSource('http://127.0.0.1:8000/index.php?step=3&username='+
                     this.user.username+
                     '&password='+
                     this.user.password+
@@ -251,7 +251,7 @@
                 if(this.active == 2){
                     this.loading = true
                     this.error = ''
-                    axios.post('http://0.0.0.0:8000/index.php?step=2&frame='+this.frame,{
+                    axios.post('http://127.0.0.1:8000/index.php?step=2&frame='+this.frame,{
                         database:this.database,
                         user:this.user,
                     }).then(res=>{
