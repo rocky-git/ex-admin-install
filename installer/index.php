@@ -22,7 +22,7 @@ switch ($step) {
             }
         }
         $data = [
-            'check' => true,
+            'check' => $check,
             'composer' => $composer,
             'composer_check' => strpos($composer, 'Composer') >= 0,
             'php' => phpversion(),
